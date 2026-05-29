@@ -140,6 +140,32 @@ Enter your API key in the top bar and click **Check Connection**. You should get
 
 ---
 
+## Testing the API (Optional — No Postman Needed)
+
+This project ships with a built-in web app for testing all endpoints directly in the browser. It was built specifically so you do not need Postman or any external API client.
+
+Once the server is running, open:
+
+```
+http://localhost:3000
+```
+
+Enter your API key in the top bar (saved automatically to localStorage — you only type it once) and you can test everything from there:
+
+| Tab | What you can do |
+|-----|-----------------|
+| **Health** | Check if the DB connection is working |
+| **Groups** | List all Sentry site groups, copy Group IDs with one click |
+| **Personnel** | List all, search by number, create new, soft-delete |
+| **Attendance** | Pull time logs for any employee by date range |
+| **Sync** | Batch-create employees from a JSON array; batch pull attendance for multiple employees |
+
+Every request shows the raw JSON response with syntax highlighting and an HTTP status badge at the bottom of the page.
+
+> If you prefer Postman or any other API client, that works too — see the **Authentication** and **Endpoints** sections below.
+
+---
+
 ## Troubleshooting
 
 ### `Login failed for user ''`
