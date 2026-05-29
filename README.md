@@ -136,6 +136,8 @@ Enter your API key in the top bar and click **Check Connection**. You should get
 { "success": true, "message": "Connected to Sentry DB." }
 ```
 
+![Web App Sample Response](public/WebApp-sample-response.PNG)
+
 ---
 
 ## Troubleshooting
