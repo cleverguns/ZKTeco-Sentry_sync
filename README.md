@@ -96,7 +96,7 @@ Edit `.env` with the correct values:
 ```env
 # Your SQL Server instance name
 # Check SQL Server Configuration Manager for the exact name
-SENTRY_DB_SERVER=DESKTOP-UVFNQD4\SQLEXPRESS
+SENTRY_DB_SERVER=YOUR-PC-NAME\SQLEXPRESS
 SENTRY_DB_NAME=SentryLocal
 
 # Leave BLANK to use Windows Authentication (required for this setup)
@@ -152,7 +152,7 @@ This means Windows Authentication failed. Check the following in order:
 
 3. **Does your Windows user have SQL Server access?** Test with:
    ```powershell
-   sqlcmd -S DESKTOP-UVFNQD4\SQLEXPRESS -d SentryLocal -E -Q "SELECT SYSTEM_USER"
+   sqlcmd -S YOUR-PC-NAME\SQLEXPRESS -d SentryLocal -E -Q "SELECT SYSTEM_USER"
    ```
    If this shows your username, access is fine. If it errors, your Windows user needs to be added to SQL Server by an administrator.
 
