@@ -17,6 +17,12 @@ This project wraps that database into a clean REST API so any application can:
 
 ---
 
+## Architecture
+
+![System Architecture](public/sync-diagram.png)
+
+---
+
 ## Critical Requirements
 
 Read this section carefully. Missing any of these will cause connection failures.
