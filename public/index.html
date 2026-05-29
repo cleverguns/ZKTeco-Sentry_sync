@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZKTeco Sentry API</title>
+  <style>
+    :root {
+      --sidebar-bg: #1e293b;
+      --sidebar-text: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --response-bg: #0f172a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--sidebar-bg);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .header h1 { color: #fff; font-size: 15px; font-weight: 600; white-space: nowrap; }
+    .header .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+    .header .dot.off { background: #475569; }
+    .header .config { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .header label { color: var(--sidebar-text); font-size: 12px; white-space: nowrap; }
+    .header input {
+      background: #334155; border: 1px solid #475569; color: #fff;
+      padding: 5px 10px; border-radius: 5px; font-size: 13px; outline: none; width: 260px;
+    }
+    .header input:focus { border-color: var(--primary); }
+
+    /* ── Layout ── */
+    .layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 175px; background: var(--sidebar-bg); flex-shrink: 0; padding: 10px 0; overflow-y: auto; }
+    .nav-section {
+      padding: 12px 14px 5px;
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #475569;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 16px; cursor: pointer; color: var(--sidebar-text);
+      font-size: 13px; transition: all 0.12s; border-left: 2px solid transparent;
+    }
+    .nav-item:hover { background: #334155; color: #e2e8f0; }
+    .nav-item.active { background: #1d4ed8; color: #fff; border-left-color: #93c5fd; }
+    .nav-icon { font-size: 14px; }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .content { flex: 1; overflow-y: auto; padding: 18px 20px; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 18px 20px; margin-bottom: 14px;
+    }
+    .card h3 { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+
+    /* ── Forms ── */
+    .form-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 130px; }
+    label { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+
+    input[type="text"], input[type="date"], textarea {
+      border: 1px solid var(--border); border-radius: 5px;
+      padding: 6px 10px; font-size: 13px; color: var(--text);
+      background: #fff; outline: none; width: 100%; font-family: inherit;
+    }
+    input:focus, textarea:focus { border-color: var(--primary); }
+    textarea { resize: vertical; font-family: 'Consolas', monospace; font-size: 12px; }
+
+    .btn {
+      padding: 6px 16px; border: none; border-radius: 5px;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.12s; white-space: nowrap;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: #fee2e2; color: #dc2626; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-ghost { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+
+    .hint {
+      font-size: 12px; color: var(--text-muted); background: #f8fafc;
+      border: 1px solid var(--border); border-radius: 5px; padding: 9px 12px; margin-bottom: 12px;
+    }
+    .hint code { background: #e2e8f0; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      background: #f8fafc; color: var(--text-muted); font-weight: 600;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+      padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--border);
+    }
+    td { padding: 7px 12px; border-bottom: 1px solid #f1f5f9; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    .copy-btn {
+      font-size: 10px; padding: 2px 6px; background: #e0f2fe; color: #0284c7;
+      border: none; border-radius: 3px; cursor: pointer; margin-left: 6px;
+    }
+    .copy-btn:hover { background: #bae6fd; }
+
+    .badge-in  { font-weight: 600; color: #16a34a; }
+    .badge-out { font-weight: 600; color: #dc2626; }
+
+    /* ── Response panel ── */
+    .response-panel {
+      flex-shrink: 0; height: 230px; background: var(--response-bg);
+      display: flex; flex-direction: column; border-top: 2px solid #0f172a;
+    }
+    .response-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 14px; border-bottom: 1px solid #1e293b; flex-shrink: 0;
+    }
+    .response-header span { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #475569; }
+    .status-badge { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 99px; }
+    .status-ok   { background: #14532d; color: #86efac; }
+    .status-err  { background: #7f1d1d; color: #fca5a5; }
+    .status-idle { background: #1e293b; color: #475569; }
+    .response-body { flex: 1; overflow-y: auto; padding: 8px 14px; }
+    .response-body pre { font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; line-height: 1.55; white-space: pre-wrap; word-break: break-all; }
+
+    .j-key  { color: #93c5fd; }
+    .j-str  { color: #86efac; }
+    .j-num  { color: #fde68a; }
+    .j-bool { color: #f9a8d4; }
+    .j-null { color: #94a3b8; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div id="status-dot" class="dot off"></div>
+  <h1>ZKTeco Sentry API</h1>
+  <div class="config">
+    <label>API Key</label>
+    <input type="text" id="api-key" placeholder="your-api-key-here" />
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="nav-section">System</div>
+    <div class="nav-item active" data-tab="health" onclick="showTab('health')">
+      <span class="nav-icon">♥</span> Health
+    </div>
+    <div class="nav-section">Data</div>
+    <div class="nav-item" data-tab="groups" onclick="showTab('groups')">
+      <span class="nav-icon">⊞</span> Groups
+    </div>
+    <div class="nav-item" data-tab="personnel" onclick="showTab('personnel')">
+      <span class="nav-icon">👤</span> Personnel
+    </div>
+    <div class="nav-item" data-tab="attendance" onclick="showTab('attendance')">
+      <span class="nav-icon">🕐</span> Attendance
+    </div>
+    <div class="nav-section">Integration</div>
+    <div class="nav-item" data-tab="sync" onclick="showTab('sync')">
+      <span class="nav-icon">⇄</span> Sync
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="content">
+
+      <!-- ── Health ── -->
+      <div id="tab-health" class="tab-content active">
+        <div class="card">
+          <h3>Connection Health</h3>
+          <p style="font-size:13px;color:#64748b;margin-bottom:14px;">
+            Checks if the API can reach the Sentry MSSQL database.
+          </p>
+          <button class="btn btn-primary" onclick="healthCheck()">Check Connection</button>
+        </div>
+      </div>
+
+      <!-- ── Groups ── -->
+      <div id="tab-groups" class="tab-content">
+        <div class="card">
+          <h3>Site Groups</h3>
+          <p class="hint">
+            Copy a Group ID and paste it into the <code>group_id</code> field when creating personnel.
+          </p>
+          <button class="btn btn-primary" onclick="loadGroups()">Load Groups</button>
+          <div id="groups-table"></div>
+        </div>
+      </div>
+
+      <!-- ── Personnel ── -->
+      <div id="tab-personnel" class="tab-content">
+        <div class="card">
+          <h3>Search / List</h3>
+          <div class="form-row">
+            <div class="form-group" style="max-width:220px;">
+              <label>Personnel No (blank = list all)</label>
+              <input type="text" id="search-pno" placeholder="e.g. 12345" />
+            </div>
+            <button class="btn btn-primary" onclick="searchPersonnel()">Search</button>
+            <button class="btn btn-ghost" onclick="listPersonnel()">List All</button>
+          </div>
+          <div id="personnel-table"></div>
+        </div>
+
+        <div class="card">
+          <h3>Create Personnel</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Personnel No *</label>
+              <input type="text" id="c-pno" placeholder="12345" />
+            </div>
+            <div class="form-group">
+              <label>First Name *</label>
+              <input type="text" id="c-fname" placeholder="Juan" />
+            </div>
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input type="text" id="c-lname" placeholder="Dela Cruz" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Middle Name</label>
+              <input type="text" id="c-mname" placeholder="Santos" />
+            </div>
+            <div class="form-group">
+              <label>Contact</label>
+              <input type="text" id="c-contact" placeholder="09171234567" />
+            </div>
+            <div class="form-group">
+              <label>Group ID (from Groups tab)</label>
+              <input type="text" id="c-group" placeholder="paste GUID here" />
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="createPersonnel()">Create</button>
+        </div>
+
+        <div class="card">
+          <h3>Delete Personnel</h3>
+          <div class="form-row">
+            <div class="form-group" style="max-width:220px;">
+              <label>Personnel No</label>
+              <input type="text" id="d-pno" placeholder="12345" />
+            </div>
+            <button class="btn btn-danger" onclick="deletePersonnel()">Soft Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Attendance ── -->
+      <div id="tab-attendance" class="tab-content">
+        <div class="card">
+          <h3>Pull Attendance Logs</h3>
+          <div class="form-row">
+            <div class="form-group" style="max-width:180px;">
+              <label>Personnel No *</label>
+              <input type="text" id="att-pno" placeholder="12345" />
+            </div>
+            <div class="form-group">
+              <label>Start Date *</label>
+              <input type="date" id="att-start" />
+            </div>
+            <div class="form-group">
+              <label>End Date *</label>
+              <input type="date" id="att-end" />
+            </div>
+            <button class="btn btn-primary" onclick="getAttendance()">Pull Logs</button>
+          </div>
+          <div id="attendance-table"></div>
+        </div>
+      </div>
+
+      <!-- ── Sync ── -->
+      <div id="tab-sync" class="tab-content">
+        <div class="card">
+          <h3>Sync Personnel (Batch)</h3>
+          <p class="hint">
+            Paste a JSON array of employees. Required fields per record:
+            <code>personnel_no</code>, <code>first_name</code>, <code>last_name</code>.
+            Records that already exist in Sentry are skipped automatically.
+          </p>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label>employees array (JSON)</label>
+            <textarea id="sync-json" rows="9" placeholder='[
+  {
+    "personnel_no": "12345",
+    "first_name": "Juan",
+    "last_name": "Dela Cruz",
+    "middle_name": "Santos",
+    "contact": "09171234567",
+    "group_id": ""
+  }
+]'></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="syncPersonnel()">Sync to Sentry</button>
+        </div>
+
+        <div class="card">
+          <h3>Sync Attendance (Batch)</h3>
+          <p class="hint">Pull attendance logs for multiple employees in one request.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Personnel Nos (comma-separated)</label>
+              <input type="text" id="sync-att-pnos" placeholder="12345, 67890, 11111" />
+            </div>
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="date" id="sync-att-start" />
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <input type="date" id="sync-att-end" />
+            </div>
+            <button class="btn btn-primary" onclick="syncAttendance()">Pull Batch</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- Response Panel -->
+    <div class="response-panel">
+      <div class="response-header">
+        <span>Response</span>
+        <span id="status-badge" class="status-badge status-idle">—</span>
+      </div>
+      <div class="response-body">
+        <pre id="response-pre" style="color:#475569;font-style:italic;">Hit an endpoint to see the response here.</pre>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div>
+
+<script>
+  // ── Config persistence ──────────────────────────────────────────────────────
+  const keyInput = document.getElementById('api-key');
+  keyInput.value = localStorage.getItem('sentry-api-key') || '';
+  keyInput.addEventListener('input', () => localStorage.setItem('sentry-api-key', keyInput.value));
+
+  // Default dates: first of current month → today
+  const today        = new Date();
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+  const todayStr     = today.toISOString().split('T')[0];
+  ['att-start', 'sync-att-start'].forEach(id => { const el = document.getElementById(id); if (el) el.value = firstOfMonth; });
+  ['att-end',   'sync-att-end'  ].forEach(id => { const el = document.getElementById(id); if (el) el.value = todayStr; });
+
+  // ── Tab switching ───────────────────────────────────────────────────────────
+  function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  }
+
+  // ── API helper ──────────────────────────────────────────────────────────────
+  async function api(method, path, body = null) {
+    const key = keyInput.value.trim();
+    if (!key) { showResponse(0, { error: 'Enter your API key in the top bar first.' }); return null; }
+
+    showResponse(-1, null);
+    try {
+      const opts = {
+        method,
+        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+      };
+      if (body !== null) opts.body = JSON.stringify(body);
+
+      const res  = await fetch(path, opts);
+      const data = await res.json();
+      showResponse(res.status, data);
+      return data;
+    } catch (err) {
+      showResponse(0, { error: err.message });
+      return null;
+    }
+  }
+
+  // ── Response panel ──────────────────────────────────────────────────────────
+  function showResponse(status, data) {
+    const badge = document.getElementById('status-badge');
+    const pre   = document.getElementById('response-pre');
+    const dot   = document.getElementById('status-dot');
+
+    if (status === -1) {
+      badge.className = 'status-badge status-idle';
+      badge.textContent = '...';
+      pre.innerHTML = '<span style="color:#475569;font-style:italic;">Loading...</span>';
+      return;
+    }
+
+    const ok = status >= 200 && status < 300;
+    badge.className  = `status-badge ${ok ? 'status-ok' : 'status-err'}`;
+    badge.textContent = status === 0 ? 'Network Error' : `HTTP ${status}`;
+    dot.className    = `dot ${ok ? '' : 'off'}`;
+    pre.innerHTML    = colorize(JSON.stringify(data, null, 2));
+  }
+
+  function colorize(json) {
+    const safe = json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return safe.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      match => {
+        if (/^"/.test(match)) return /:$/.test(match) ? `<span class="j-key">${match}</span>` : `<span class="j-str">${match}</span>`;
+        if (/true|false/.test(match)) return `<span class="j-bool">${match}</span>`;
+        if (/null/.test(match))       return `<span class="j-null">${match}</span>`;
+        return `<span class="j-num">${match}</span>`;
+      }
+    );
+  }
+
+  // ── Health ──────────────────────────────────────────────────────────────────
+  function healthCheck() { api('GET', '/api/health'); }
+
+  // ── Groups ──────────────────────────────────────────────────────────────────
+  async function loadGroups() {
+    const data = await api('GET', '/api/groups');
+    if (!data?.data) return;
+    const el = document.getElementById('groups-table');
+    if (!data.data.length) { el.innerHTML = '<p style="font-size:13px;color:#64748b;margin-top:10px;">No groups found.</p>'; return; }
+    el.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>ID</th></tr></thead>
+          <tbody>
+            ${data.data.map(g => `
+              <tr>
+                <td style="font-weight:500;">${esc(g.Name)}</td>
+                <td style="font-family:monospace;font-size:12px;color:#64748b;">
+                  ${esc(g.Id)}<button class="copy-btn" onclick="copyText('${esc(g.Id)}')">Copy ID</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  // ── Personnel ───────────────────────────────────────────────────────────────
+  async function listPersonnel() {
+    const data = await api('GET', '/api/personnel');
+    renderPersonnelTable(data?.data);
+  }
+
+  async function searchPersonnel() {
+    const pno = document.getElementById('search-pno').value.trim();
+    if (!pno) { listPersonnel(); return; }
+    const data = await api('GET', `/api/personnel/${encodeURIComponent(pno)}`);
+    if (!data) return;
+    renderPersonnelTable(data.exists ? [data.data] : []);
+    if (!data.exists) {
+      document.getElementById('personnel-table').innerHTML =
+        '<p style="font-size:13px;color:#64748b;margin-top:10px;">No personnel found with that number.</p>';
+    }
+  }
+
+  function renderPersonnelTable(rows) {
+    const el = document.getElementById('personnel-table');
+    if (!rows?.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>No</th><th>Last Name</th><th>First Name</th><th>Middle</th><th>Contact</th></tr></thead>
+          <tbody>
+            ${rows.map(p => `
+              <tr>
+                <td style="font-weight:600;">${esc(p.PersonnelNo)}</td>
+                <td>${esc(p.LastName)}</td>
+                <td>${esc(p.FirstName)}</td>
+                <td style="color:#94a3b8;">${esc(p.MiddleName || '—')}</td>
+                <td style="color:#94a3b8;">${esc(p.ContactNumber || '—')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  async function createPersonnel() {
+    const body = {
+      personnel_no: document.getElementById('c-pno').value.trim(),
+      first_name:   document.getElementById('c-fname').value.trim(),
+      last_name:    document.getElementById('c-lname').value.trim(),
+    };
+    const mname   = document.getElementById('c-mname').value.trim();
+    const contact = document.getElementById('c-contact').value.trim();
+    const group   = document.getElementById('c-group').value.trim();
+    if (mname)   body.middle_name = mname;
+    if (contact) body.contact     = contact;
+    if (group)   body.group_id    = group;
+    await api('POST', '/api/personnel', body);
+  }
+
+  async function deletePersonnel() {
+    const pno = document.getElementById('d-pno').value.trim();
+    if (!pno) { alert('Enter a Personnel No.'); return; }
+    if (!confirm(`Soft-delete personnel "${pno}"?`)) return;
+    await api('DELETE', `/api/personnel/${encodeURIComponent(pno)}`);
+  }
+
+  // ── Attendance ──────────────────────────────────────────────────────────────
+  async function getAttendance() {
+    const pno   = document.getElementById('att-pno').value.trim();
+    const start = document.getElementById('att-start').value;
+    const end   = document.getElementById('att-end').value;
+    if (!pno || !start || !end) { alert('Fill in all fields.'); return; }
+
+    const data = await api('GET', `/api/attendance?personnel_no=${encodeURIComponent(pno)}&start_date=${start}&end_date=${end}`);
+    const el   = document.getElementById('attendance-table');
+    if (!data?.data) return;
+    if (!data.data.length) {
+      el.innerHTML = '<p style="font-size:13px;color:#64748b;margin-top:10px;">No logs found for this period.</p>';
+      return;
+    }
+    el.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Location</th><th>Device</th></tr></thead>
+          <tbody>
+            ${data.data.map(l => {
+              const ts   = l.TimeLogStamp || '';
+              const time = ts.includes('T') ? ts.split('T')[1]?.substring(0, 8) : ts;
+              const date = (l.RecordDate || '').split('T')[0];
+              return `
+              <tr>
+                <td>${esc(date)}</td>
+                <td style="font-family:monospace;">${esc(time)}</td>
+                <td><span class="${l.LogType === 'IN' ? 'badge-in' : 'badge-out'}">${esc(l.LogType)}</span></td>
+                <td>${esc(l.Location || '—')}</td>
+                <td style="color:#94a3b8;font-size:12px;">${esc(l.DeviceSerialNumber || '—')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  // ── Sync ────────────────────────────────────────────────────────────────────
+  async function syncPersonnel() {
+    let employees;
+    try { employees = JSON.parse(document.getElementById('sync-json').value); }
+    catch (e) { alert('Invalid JSON: ' + e.message); return; }
+    if (!Array.isArray(employees)) { alert('Must be a JSON array [...].'); return; }
+    await api('POST', '/api/sync/personnel', { employees });
+  }
+
+  async function syncAttendance() {
+    const pnos  = document.getElementById('sync-att-pnos').value.split(',').map(s => s.trim()).filter(Boolean);
+    const start = document.getElementById('sync-att-start').value;
+    const end   = document.getElementById('sync-att-end').value;
+    if (!pnos.length || !start || !end) { alert('Fill in all sync attendance fields.'); return; }
+    await api('POST', '/api/sync/attendance', { personnel_nos: pnos, start_date: start, end_date: end });
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.target;
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = orig, 1500);
+    });
+  }
+</script>
+</body>
+</html>
